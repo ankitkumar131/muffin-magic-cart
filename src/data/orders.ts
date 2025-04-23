@@ -71,3 +71,7 @@ export const orders: Order[] = [
 export const getUserOrders = (userId: string): Order[] => {
   return orders.filter(order => order.userId === userId);
 };
+
+export const getOrderById = (orderId: string): Order | undefined => {
+  return orders.find(order => order.id === orderId);
+};
