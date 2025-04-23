@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "@/data/products";
@@ -13,6 +12,7 @@ import {
   Truck,
   Clock,
   ArrowLeft,
+  CreditCard,
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import ProductGrid from "@/components/products/ProductGrid";
@@ -63,7 +63,6 @@ const ProductDetails = () => {
     }
   };
 
-  // Get related products (same category)
   const relatedProducts = getProductsByCategory(product.category[0]).filter(
     (p) => p.id !== product.id
   ).slice(0, 4);
@@ -134,11 +133,19 @@ const ProductDetails = () => {
           <div className="space-y-4 mb-8">
             <Button
               onClick={handleAddToCart}
-              className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90"
+              className="w-full flex items-center justify-center gap-2 bg-secondary hover:bg-secondary/90"
               size="lg"
             >
               <ShoppingCart className="w-5 h-5" />
               Add to Cart
+            </Button>
+            <Button
+              onClick={handleAddToCart}
+              className="w-full flex items-center justify-center gap-2"
+              size="lg"
+            >
+              <CreditCard className="w-5 h-5" />
+              Buy Now
             </Button>
             <Button
               variant="outline"
