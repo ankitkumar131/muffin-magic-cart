@@ -1,6 +1,7 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getProductById } from "@/data/products";
+import { productApi } from "@/api";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import ProductGrid from "@/components/products/ProductGrid";
-import { getProductsByCategory } from "@/data/products";
+import { Product } from "@/types/product";
 
 const ProductDetails = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -24,8 +25,47 @@ const ProductDetails = () => {
   const { addItem } = useCart();
   const { isAuthenticated } = useAuth();
   const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const product = getProductById(productId || "");
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      if (!productId) return;
+      
+      setLoading(true);
+      try {
+        const productData = await productApi.getProductById(productId);
+        
+        if (productData) {
+          setProduct(productData);
+          
+          // Fetch related products
+          const related = await productApi.getRelatedProducts(productId, 4);
+          setRelatedProducts(related);
+        }
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load product details.",
+        });
+        console.error("Error fetching product:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductDetails();
+  }, [productId, toast]);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-16 flex justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -51,10 +91,6 @@ const ProductDetails = () => {
     }
 
     addItem(product, quantity);
-    toast({
-      title: "Added to cart",
-      description: `${quantity} x ${product.name} added to your cart.`,
-    });
   };
 
   const handleQuantityChange = (newQuantity: number) => {
@@ -62,10 +98,6 @@ const ProductDetails = () => {
       setQuantity(newQuantity);
     }
   };
-
-  const relatedProducts = getProductsByCategory(product.category[0]).filter(
-    (p) => p.id !== product.id
-  ).slice(0, 4);
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -226,12 +258,14 @@ const ProductDetails = () => {
         </div>
       </div>
 
-      <div className="mt-16">
-        <h2 className="text-2xl font-pacifico text-brand-darkBrown mb-6">
-          You might also like
-        </h2>
-        <ProductGrid products={relatedProducts} />
-      </div>
+      {relatedProducts.length > 0 && (
+        <div className="mt-16">
+          <h2 className="text-2xl font-pacifico text-brand-darkBrown mb-6">
+            You might also like
+          </h2>
+          <ProductGrid products={relatedProducts} />
+        </div>
+      )}
     </div>
   );
 };

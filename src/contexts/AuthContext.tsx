@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
+import { authApi } from "@/api";
 
 type User = {
   id: string;
@@ -18,108 +19,87 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo purposes - in real app, this would be in a database
-const mockUsers = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john@example.com",
-    password: "password123",
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    email: "jane@example.com",
-    password: "password456",
-  },
-];
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
     // Check if user is stored in local storage
-    const storedUser = localStorage.getItem("threemuffinsUser");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
-    }
+    const loadUser = async () => {
+      try {
+        const userData = await authApi.getCurrentUser();
+        if (userData) {
+          setUser(userData);
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error("Failed to load user:", error);
+      }
+    };
+
+    loadUser();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Mock login - would be an API call in a real app
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        const foundUser = mockUsers.find(
-          (u) => u.email === email && u.password === password
-        );
-        
-        if (foundUser) {
-          const { password, ...userData } = foundUser;
-          setUser(userData);
-          setIsAuthenticated(true);
-          localStorage.setItem("threemuffinsUser", JSON.stringify(userData));
-          toast({
-            title: "Welcome back!",
-            description: `Good to see you again, ${userData.name}!`,
-          });
-          resolve();
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Login failed",
-            description: "Invalid email or password.",
-          });
-          reject("Invalid credentials");
-        }
-      }, 800);
-    });
+    try {
+      const { user: userData, token } = await authApi.login({ email, password });
+      setUser(userData);
+      setIsAuthenticated(true);
+      localStorage.setItem("threemuffinsUser", JSON.stringify(userData));
+      localStorage.setItem("threemuffinsAuthToken", token);
+      
+      toast({
+        title: "Welcome back!",
+        description: `Good to see you again, ${userData.name}!`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "Invalid email or password.",
+      });
+      throw error;
+    }
   };
 
   const signup = async (name: string, email: string, password: string) => {
-    // Mock signup - would be an API call in a real app
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        const existingUser = mockUsers.find((u) => u.email === email);
-        if (existingUser) {
-          toast({
-            variant: "destructive",
-            title: "Signup failed",
-            description: "Email already in use.",
-          });
-          reject("Email already in use");
-        } else {
-          const newUser = {
-            id: (mockUsers.length + 1).toString(),
-            name,
-            email,
-          };
-          
-          // In a real app, this would be added to a database
-          mockUsers.push({ ...newUser, password });
-          
-          setUser(newUser);
-          setIsAuthenticated(true);
-          localStorage.setItem("threemuffinsUser", JSON.stringify(newUser));
-          toast({
-            title: "Welcome to ThreeMuffins!",
-            description: `Your account has been created successfully, ${name}!`,
-          });
-          resolve();
-        }
-      }, 800);
-    });
+    try {
+      const { user: userData, token } = await authApi.signup({ name, email, password });
+      setUser(userData);
+      setIsAuthenticated(true);
+      localStorage.setItem("threemuffinsUser", JSON.stringify(userData));
+      localStorage.setItem("threemuffinsAuthToken", token);
+      
+      toast({
+        title: "Welcome to ThreeMuffins!",
+        description: `Your account has been created successfully, ${name}!`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Signup failed",
+        description: error instanceof Error ? error.message : "Email already in use.",
+      });
+      throw error;
+    }
   };
 
   const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem("threemuffinsUser");
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully.",
-    });
+    authApi.logout()
+      .then(() => {
+        setUser(null);
+        setIsAuthenticated(false);
+        localStorage.removeItem("threemuffinsUser");
+        localStorage.removeItem("threemuffinsAuthToken");
+        
+        toast({
+          title: "Logged out",
+          description: "You have been logged out successfully.",
+        });
+      })
+      .catch(error => {
+        console.error("Logout error:", error);
+      });
   };
 
   return (
