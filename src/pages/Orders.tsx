@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { orderApi } from "@/api";
+import { getUserOrders } from "@/data/orders";
 import { useAuth } from "@/contexts/AuthContext";
 import RequireAuth from "@/components/auth/RequireAuth";
 import {
@@ -22,38 +22,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Check, Clock, XCircle, ShoppingBag, ChevronRight } from "lucide-react";
 import { Order } from "@/types/order";
-import { useToast } from "@/components/ui/use-toast";
 
 const Orders = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        const userOrders = await orderApi.getUserOrders();
-        setOrders(userOrders);
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Failed to load orders",
-          description: "There was an error fetching your order history.",
-        });
-        console.error("Error fetching orders:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (user?.id) {
-      fetchOrders();
-    } else {
-      setLoading(false);
+      const userOrders = getUserOrders(user.id);
+      setOrders(userOrders);
     }
-  }, [user, toast]);
+  }, [user]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -91,19 +70,6 @@ const Orders = () => {
       </Button>
     </div>
   );
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-12">
-        <h1 className="text-3xl font-pacifico text-brand-darkBrown mb-8">
-          Order History
-        </h1>
-        <div className="flex justify-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <RequireAuth>

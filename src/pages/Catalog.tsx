@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { productApi } from "@/api";
+import { getProductsByCategory, products } from "@/data/products";
 import ProductGrid from "@/components/products/ProductGrid";
 import {
   Select,
@@ -17,19 +17,16 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Product, Category } from "@/types/product";
-import { useToast } from "@/components/ui/use-toast";
 
 const Catalog = () => {
-  const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get("category");
   
   const [activeCategory, setActiveCategory] = useState<string>(
     categoryParam || "all"
   );
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
   const [sortOption, setSortOption] = useState<string>("featured");
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (categoryParam && categoryParam !== activeCategory) {
@@ -38,28 +35,32 @@ const Catalog = () => {
   }, [categoryParam, activeCategory]);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        const products = await productApi.getProducts({
-          category: activeCategory !== "all" ? activeCategory : undefined,
-          sort: sortOption
-        });
-        setFilteredProducts(products);
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Failed to load products",
-          description: "There was an error fetching the product catalog.",
-        });
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    let filtered = 
+      activeCategory === "all" 
+        ? [...products] 
+        : getProductsByCategory(activeCategory);
 
-    fetchProducts();
-  }, [activeCategory, sortOption, toast]);
+    switch (sortOption) {
+      case "price-asc":
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case "price-desc":
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case "name-asc":
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "name-desc":
+        filtered.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case "featured":
+      default:
+        filtered.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+        break;
+    }
+
+    setFilteredProducts(filtered);
+  }, [activeCategory, sortOption]);
 
   const handleCategoryChange = (value: string) => {
     setActiveCategory(value);
@@ -129,11 +130,7 @@ const Catalog = () => {
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-      ) : filteredProducts.length > 0 ? (
+      {filteredProducts.length > 0 ? (
         <ProductGrid products={filteredProducts} />
       ) : (
         <div className="text-center py-16">
