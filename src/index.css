@@ -1,0 +1,113 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 100% 98%; /* Light cream */
+    --foreground: 30 6% 25%; /* Brown text */
+
+    --card: 0 0% 100%;
+    --card-foreground: 30 6% 25%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 30 6% 25%;
+
+    --primary: 325 77% 78%; /* Pink */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 31 97% 72%; /* Peach */
+    --secondary-foreground: 30 40% 15%;
+
+    --muted: 40 50% 97%;
+    --muted-foreground: 30 6% 45%;
+
+    --accent: 31 97% 88%; /* Light peach */
+    --accent-foreground: 30 40% 15%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 30 10% 80%;
+    --input: 30 10% 80%;
+    --ring: 325 77% 78%; /* Pink */
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 30 6% 15%; /* Dark brown */
+    --foreground: 40 100% 95%; /* Light cream */
+
+    --card: 30 6% 20%;
+    --card-foreground: 40 100% 95%;
+
+    --popover: 30 6% 20%;
+    --popover-foreground: 40 100% 95%;
+
+    --primary: 325 77% 65%; /* Darker pink */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 31 97% 58%; /* Darker peach */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 30 6% 25%;
+    --muted-foreground: 30 6% 70%;
+
+    --accent: 31 50% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 30 6% 35%;
+    --input: 30 6% 35%;
+    --ring: 325 77% 65%; /* Darker pink */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-poppins;
+  }
+
+  h1, h2, h3 {
+    @apply font-pacifico;
+  }
+
+  .logo-text {
+    @apply font-pacifico;
+  }
+
+  .product-card {
+    @apply rounded-lg overflow-hidden border border-border hover:shadow-lg transition-all duration-300 bg-white;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary/90;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90;
+  }
+
+  .btn-outline {
+    @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+  }
+}
