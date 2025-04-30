@@ -20,7 +20,7 @@ interface ProductCardProps {
   product: Product;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/uploads/products/';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function ProductCard({ product }: ProductCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -38,7 +38,12 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const getImageUrl = (imagePath: string) => {
     if (!imagePath) return '';
-    return imagePath; // Use the full URL directly from the backend
+    if (imagePath.startsWith('http') || imagePath.startsWith('/')) {
+      return imagePath;
+    }
+    // Convert Windows path to URL format and ensure forward slashes
+    const urlPath = imagePath.replace(/\\/g, '/');
+    return `${API_BASE}/${urlPath}`;
   };
 
   const getMainCategory = () => {
@@ -60,7 +65,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = '';
-                  (e.target as HTMLImageElement).alt = 'Product image not available';
+                  (e.target as HTMLImageElement).alt = 'Image not available';
                 }}
               />
             </div>
